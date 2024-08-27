@@ -9,10 +9,11 @@ plotting = True
 #%% Load the data from the CSV file
 all_notes, note_list = load_notes_frequencies_csv()
 
+
 #%% Listen with PyAudio
 
 # Parameters
-RECORD_SECONDS = 1
+RECORD_SECONDS = 0.5
 
 # Initialize pyaudio
 audio = pyaudio.PyAudio()
@@ -35,7 +36,7 @@ if np.mean(np.abs(audio_data)) > volume_threshold:
     x, f = get_signal_spectrum(normalized_audio_data)
     
     # Identify note frequency
-    magnitude_threshold = 500 # threshold for selecting first harmonic
+    magnitude_threshold = 120 # threshold for selecting first harmonic
     note = note_frequency(x, f, magnitude_threshold)
     
     # Plot spectrum
@@ -45,11 +46,6 @@ if np.mean(np.abs(audio_data)) > volume_threshold:
     # Identify note closest to first harmonic
     output_str = match_note(note, all_notes, note_list)
     print(output_str)
-    
-        
-    
-    
-    
     
     
 if plotting: 

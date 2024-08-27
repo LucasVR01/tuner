@@ -80,7 +80,7 @@ def plot_spectrum(x, f, threshold, note):
     plt.ylim((0, np.max(x) * 1.1))
     
     
-def note_frequency(x, f, threshold):
+def get_note_frequency(x, f, threshold):
     if max(x) > threshold:
         # Identify harmonics
         ft = f[x >= threshold]
