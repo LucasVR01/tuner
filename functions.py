@@ -116,7 +116,7 @@ def match_note(note, all_notes, note_list):
     elif difference < -1.3:
         difference_str = " ↑↑"
     else:
-        difference_str = "↑"
+        difference_str = " ↑"
         
     return note_str + difference_str
  

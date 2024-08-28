@@ -1,7 +1,7 @@
 import numpy as np
 import pyaudio
 import matplotlib.pyplot as plt
-from functions import load_notes_frequencies_csv, listen_pyaudio, plot_raw_signal, get_signal_spectrum, plot_spectrum, note_frequency, match_note
+from functions import load_notes_frequencies_csv, listen_pyaudio, plot_raw_signal, get_signal_spectrum, plot_spectrum, get_note_frequency, match_note
 
 #%%
 plotting = True
@@ -13,7 +13,7 @@ all_notes, note_list = load_notes_frequencies_csv()
 #%% Listen with PyAudio
 
 # Parameters
-RECORD_SECONDS = 0.5
+RECORD_SECONDS = 2
 
 # Initialize pyaudio
 audio = pyaudio.PyAudio()
@@ -36,8 +36,8 @@ if np.mean(np.abs(audio_data)) > volume_threshold:
     x, f = get_signal_spectrum(normalized_audio_data)
     
     # Identify note frequency
-    magnitude_threshold = 120 # threshold for selecting first harmonic
-    note = note_frequency(x, f, magnitude_threshold)
+    magnitude_threshold = 2000 # threshold for selecting first harmonic
+    note = get_note_frequency(x, f, magnitude_threshold)
     
     # Plot spectrum
     if plotting:
