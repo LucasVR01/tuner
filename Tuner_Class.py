@@ -2,10 +2,9 @@ import numpy as np
 import pandas as pd
 import pyaudio
 import time
-import os
 
 class Tuner:
-    def __init__(self, record_seconds=2, chunk=1024, rate=44100, volume_threshold=100, magnitude_threshold=2000):
+    def __init__(self, record_seconds=1, chunk=1024, rate=44100, volume_threshold=100, magnitude_threshold=1000):
         self.record_seconds = record_seconds
         self.chunk = chunk
         self.rate = rate
@@ -53,7 +52,7 @@ class Tuner:
         freq = frequencies[0:n//2]
         
         # Trim signal
-        aux = freq <= 2500
+        aux = freq <= 5000
         f = freq[aux]
         x = audio_fft[aux]
         
@@ -128,8 +127,7 @@ class Tuner:
                         output_str = self.match_note(note)
                         
                         # Print note
-                        # os.system("cls")
-                        print(output_str)
+                        print(f"\r{output_str}")
                         
         except KeyboardInterrupt:
             print("\nTuner stopped by user.")

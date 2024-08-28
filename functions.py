@@ -60,7 +60,7 @@ def get_signal_spectrum(audio_data):
     freq = frequencies[0:n//2]
     
     # Trim signal
-    aux = freq <= 2500
+    aux = freq <= 5000
     f = freq[aux]
     x = audio_fft[aux]
     
