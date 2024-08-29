@@ -11,7 +11,7 @@ class Tuner:
         self.rate = rate
         self.volume_threshold = volume_threshold
         self.magnitude_threshold = magnitude_threshold
-        self.audio = pyaudio.PyAudio()
+        self.audio = None
         self.all_notes, self.note_list = self.load_notes_frequencies_csv()
         self.running = False
         
@@ -103,10 +103,12 @@ class Tuner:
         return note_str + difference_str
         
 
-    def start(self, listen_time=120):
+    def start(self, listen_time=float('inf')):
         self.running = True
+        self.audio = pyaudio.PyAudio()
         start_time = time.time()
         print("Recording...")
+        
         try:
             while self.running and time.time() - start_time < listen_time:
                 # Record using pyaudio
@@ -155,7 +157,7 @@ if __name__ == "__main__":
     tuner_thread.start()
 
     # Run the tuner for 5 seconds, then stop it
-    time.sleep(5)
+    time.sleep(120)
     tuner.stop()
 
     # Wait for the tuner thread to finish

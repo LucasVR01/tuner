@@ -35,14 +35,19 @@ class Tuner_GUI:
                                      command=self.stop_tuner,)
         self.stop_button.pack(side="left", padx=5)
         self.stop_button.config(state="disabled")
-
+        
         self.is_running = False
+        
+        # Bind the close window event
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
         
     def start_tuner(self):
         # Disable the start button and enable the stop button
         self.start_button.config(state="disabled")
         self.stop_button.config(state="normal")
+        
+        self.is_running = True
         
         # Start the tuner in a new thread
         print("Tuner started")
@@ -51,13 +56,21 @@ class Tuner_GUI:
         
         
     def stop_tuner(self):
-        self.start_button.config(state="normal")
         self.stop_button.config(state="disabled")
+        self.start_button.config(state="normal")
+        
+        self.is_running = False
         
         # Stop the tuner
         self.tuner.stop()
         self.tuner_thread.join()
         
+        
+    def on_closing(self):
+        if self.is_running:
+            self.stop_tuner()
+        self.root.destroy()
+            
         
     def run(self):
         self.root.mainloop()
