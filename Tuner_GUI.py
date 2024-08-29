@@ -1,7 +1,7 @@
 import ctypes
 import tkinter as tk
 from threading import Thread
-
+from Tuner_Class import Tuner
 
 
 
@@ -34,19 +34,37 @@ class Tuner_GUI:
                                      activebackground="red", activeforeground="white",
                                      command=self.stop_tuner,)
         self.stop_button.pack(side="left", padx=5)
+        self.stop_button.config(state="disabled")
 
         self.is_running = False
         
-        self.root.mainloop()
-        
         
     def start_tuner(self):
+        # Disable the start button and enable the stop button
+        self.start_button.config(state="disabled")
+        self.stop_button.config(state="normal")
+        
+        # Start the tuner in a new thread
         print("Tuner started")
+        self.tuner_thread = Thread(target=self.tuner.start, args=(120,))
+        self.tuner_thread.start()
+        
         
     def stop_tuner(self):
-        print("Tuner stopped")
+        self.start_button.config(state="normal")
+        self.stop_button.config(state="disabled")
+        
+        # Stop the tuner
+        self.tuner.stop()
+        self.tuner_thread.join()
         
         
-gui = Tuner_GUI(1)
+    def run(self):
+        self.root.mainloop()
+        
+if __name__ == "__main__":
+    tuner = Tuner()
+    gui = Tuner_GUI(tuner)
+    gui.run()
         
 

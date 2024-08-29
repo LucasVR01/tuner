@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pyaudio
 import time
+from threading import Thread
 
 class Tuner:
     def __init__(self, record_seconds=1, chunk=1024, rate=44100, volume_threshold=100, magnitude_threshold=1000):
@@ -12,6 +13,7 @@ class Tuner:
         self.magnitude_threshold = magnitude_threshold
         self.audio = pyaudio.PyAudio()
         self.all_notes, self.note_list = self.load_notes_frequencies_csv()
+        self.running = False
         
     
     def load_notes_frequencies_csv(self):
@@ -102,10 +104,11 @@ class Tuner:
         
 
     def start(self, listen_time=120):
+        self.running = True
         start_time = time.time()
-        print("Recording")
+        print("Recording...")
         try:
-            while time.time() - start_time < listen_time:
+            while self.running and time.time() - start_time < listen_time:
                 # Record using pyaudio
                 audio_data = self.listen_pyaudio()
                 
@@ -129,16 +132,34 @@ class Tuner:
                         # Print note
                         print(f"\r{output_str}")
                         
+            print("\nTuner stopped.")
+                        
         except KeyboardInterrupt:
             print("\nTuner stopped by user.")
             
         finally:
             self.audio.terminate()
+            
+    def stop(self):
+        self.running = False
+            
+            
+    # In futre iterations, "start" will not print anything, just return a string which will either be printed or displayed on the GUI
         
         
-        
-tuner = Tuner()
-tuner.start(180)
+if __name__ == "__main__":      
+    tuner = Tuner()
+    
+    # Start the tuner in a separate thread so that it can be stopped later
+    tuner_thread = Thread(target=tuner.start)
+    tuner_thread.start()
+
+    # Run the tuner for 5 seconds, then stop it
+    time.sleep(5)
+    tuner.stop()
+
+    # Wait for the tuner thread to finish
+    tuner_thread.join()
         
         
         
