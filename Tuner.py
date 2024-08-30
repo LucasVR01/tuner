@@ -44,7 +44,32 @@ if np.mean(np.abs(audio_data)) > volume_threshold:
         plot_spectrum(x, f, magnitude_threshold, note)
         
     # Identify note closest to first harmonic
-    output_str = match_note(note, all_notes, note_list)
+    '''output_str = match_note(note, all_notes, note_list)'''
+    # Identify note closest to first harmonic
+    ratios = note/all_notes
+    closeness = np.abs(ratios - 1)
+    indices = np.where(closeness == np.min(closeness))
+    
+    note_str = note_list[indices[0][0]]
+    
+    # Detect whether note is higher or lower than target
+    difference = (ratios[indices] - 1) * 100
+    if difference > 2:
+        difference_str = " ↓↓↓"
+    elif difference > 1.3:
+        difference_str = " ↓↓"
+    elif difference > 0.5:
+        difference_str = " ↓"
+    elif difference < 0.5 and difference > -0.5:
+        difference_str = ""
+    elif difference < -2:
+        difference_str = " ↑↑↑"
+    elif difference < -1.3:
+        difference_str = " ↑↑"
+    else:
+        difference_str = " ↑"
+        
+    output_str = note_str + difference_str
     print(output_str)
     
     

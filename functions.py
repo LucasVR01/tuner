@@ -80,13 +80,14 @@ def plot_spectrum(x, f, threshold, note):
     plt.ylim((0, np.max(x) * 1.1))
     
     
-def get_note_frequency(x, f, threshold):
-    if max(x) > threshold:
-        # Identify harmonics
-        ft = f[x >= threshold]
+def get_note_frequency(x, f, magnitude_threshold):
+    if max(x) > magnitude_threshold: 
+        ft = f[x >= magnitude_threshold] # frequencies higher than threshold
+        ft_gp1 = ft[ft < ft[0]*1.05] # frequencies close to first harmonic (first group)
+        idx_gp1 = np.where(np.isin(f, ft_gp1))[0]  # indices of frequencies in the first group
+        x_max_gp1 = np.max(x[idx_gp1]) # maximum value of x within the first group
+        note = f[x == x_max_gp1] # frequency of the maximum value of x in the first group
         
-        # Identify first harmonic
-        note = np.mean(ft[ft < ft[0]*1.05])
     else:
         note = None
     
@@ -101,7 +102,7 @@ def match_note(note, all_notes, note_list):
     
     note_str = note_list[indices[0][0]]
     
-    # Detect whether note is higher or lower then target
+    # Detect whether note is higher or lower than target
     difference = (ratios[indices] - 1) * 100
     if difference > 2:
         difference_str = " ↓↓↓"

@@ -62,12 +62,12 @@ class Tuner:
     
     
     def get_note_frequency(self, x, f):
-        if max(x) > self.magnitude_threshold:
-            # Identify harmonics
-            ft = f[x >= self.magnitude_threshold]
-            
-            # Identify first harmonic
-            note = np.mean(ft[ft < ft[0]*1.05])
+        if np.max(x) > self.magnitude_threshold:
+            ft = f[x >= self.magnitude_threshold]        # frequencies higher than threshold
+            ft_gp1 = ft[ft < ft[0]*1.05]                 # frequencies close to first harmonic (first group)
+            idx_gp1 = np.where(np.isin(f, ft_gp1))[0]    # indices of frequencies in the first group
+            x_max_gp1 = np.max(x[idx_gp1])               # maximum value of x within the first group
+            note = f[x == x_max_gp1]                     # frequency of the maximum value of x in the first group
         else:
             note = None
         
@@ -82,7 +82,7 @@ class Tuner:
         
         note_str = self.note_list[indices[0][0]]
         
-        # Detect whether note is higher or lower then target
+        # Detect whether note is higher or lower than target
         difference = (ratios[indices] - 1) * 100
         difference_str = ""
         if difference > 2:
@@ -103,7 +103,7 @@ class Tuner:
         return note_str + difference_str
         
 
-    def start(self, listen_time=float('inf')):
+    def start(self, listen_time=float('inf'), callback=None):
         self.running = True
         self.audio = pyaudio.PyAudio()
         start_time = time.time()
@@ -131,8 +131,12 @@ class Tuner:
                         # Identify note closest to first harmonic
                         output_str = self.match_note(note)
                         
-                        # Print note
-                        print(f"\r{output_str}")
+                        if callback:
+                            # Send the note to the GUI via the callback
+                            callback(output_str)
+                        else:
+                            # Print note
+                            print(f"\r{output_str}")
                         
             print("\nTuner stopped.")
                         

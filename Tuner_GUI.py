@@ -16,6 +16,7 @@ class Tuner_GUI:
         self.root = tk.Tk()
         self.root.title("Tuner")
         self.root.geometry("300x200")
+        self.root.eval('tk::PlaceWindow . center')
         
         # Create a frame to hold the buttons
         button_frame = tk.Frame(self.root)
@@ -36,6 +37,11 @@ class Tuner_GUI:
         self.stop_button.pack(side="left", padx=5)
         self.stop_button.config(state="disabled")
         
+        # Label to display the detected note
+        self.note_label = tk.Label(self.root, text="", font=("Helvetica", 20, "bold"),
+                                   anchor="center", justify="center")
+        self.note_label.pack(pady=20)
+        
         self.is_running = False
         
         # Bind the close window event
@@ -51,7 +57,7 @@ class Tuner_GUI:
         
         # Start the tuner in a new thread
         print("Tuner started")
-        self.tuner_thread = Thread(target=self.tuner.start, args=(120,))
+        self.tuner_thread = Thread(target=self.tuner.start, args=(float('inf'), self.update_note_label))
         self.tuner_thread.start()
         
         
@@ -70,6 +76,10 @@ class Tuner_GUI:
         if self.is_running:
             self.stop_tuner()
         self.root.destroy()
+        
+        
+    def update_note_label(self, note):
+        self.note_label.config(text=f"{note}")
             
         
     def run(self):
