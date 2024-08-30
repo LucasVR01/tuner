@@ -74,7 +74,7 @@ class Tuner:
         return note
     
     
-    def match_note(self, note):
+    def match_note(self, note, dif=True):
         # Identify note closest to first harmonic
         ratios = note/self.all_notes
         closeness = np.abs(ratios - 1)
@@ -82,28 +82,17 @@ class Tuner:
         
         note_str = self.note_list[indices[0][0]]
         
-        # Detect whether note is higher or lower than target
-        difference = (ratios[indices] - 1) * 100
-        difference_str = ""
-        if difference > 2:
-            difference_str = " ↓↓↓"
-        elif difference > 1.3:
-            difference_str = " ↓↓"
-        elif difference > 0.5:
-            difference_str = " ↓"
-        elif difference < 0.5 and difference > -0.5:
-            difference_str = ""
-        elif difference < -2:
-            difference_str = " ↑↑↑"
-        elif difference < -1.3:
-            difference_str = " ↑↑"
+        if dif:
+            # Detect whether note is higher or lower than target
+            difference = (ratios[indices] - 1) * 100
+            percentage = 50 + (difference / 2.973) * 50  # Normalize to a 0-100 scale
+                
+            return note_str, float(max(0, min(100, percentage)))
         else:
-            difference_str = " ↑"
-            
-        return note_str + difference_str
+            return note_str, 50
         
 
-    def start(self, listen_time=float('inf'), callback=None):
+    def start(self, listen_time=float('inf'), callback=None, dif=True):
         self.running = True
         self.audio = pyaudio.PyAudio()
         start_time = time.time()
@@ -129,14 +118,14 @@ class Tuner:
                     
                     if note:
                         # Identify note closest to first harmonic
-                        output_str = self.match_note(note)
+                        note_str, percentage = self.match_note(note, dif)
                         
                         if callback:
                             # Send the note to the GUI via the callback
-                            callback(output_str)
+                            callback((note_str, percentage))
                         else:
                             # Print note
-                            print(f"\r{output_str}")
+                            print(f"\r{note_str}")
                         
             print("\nTuner stopped.")
                         
@@ -157,15 +146,7 @@ if __name__ == "__main__":
     tuner = Tuner()
     
     # Start the tuner in a separate thread so that it can be stopped later
-    tuner_thread = Thread(target=tuner.start)
-    tuner_thread.start()
-
-    # Run the tuner for 5 seconds, then stop it
-    time.sleep(120)
-    tuner.stop()
-
-    # Wait for the tuner thread to finish
-    tuner_thread.join()
+    tuner.start(10)
         
         
         

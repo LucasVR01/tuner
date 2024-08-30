@@ -1,5 +1,6 @@
 import ctypes
 import tkinter as tk
+from tkinter import ttk
 from threading import Thread
 from Tuner_Class import Tuner
 
@@ -8,6 +9,7 @@ from Tuner_Class import Tuner
 class Tuner_GUI:
     def __init__(self, tuner):
         self.tuner = tuner
+        self.is_running = False
         
         # Adjust the resolution
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
@@ -42,7 +44,11 @@ class Tuner_GUI:
                                    anchor="center", justify="center")
         self.note_label.pack(pady=20)
         
-        self.is_running = False
+        # Progress bar to show tuning status
+        self.progress = ttk.Progressbar(self.root, orient="horizontal", length=200, mode="determinate")
+        self.progress.pack(pady=10)
+        self.progress["maximum"] = 100  # Progress bar range from 0 to 100
+        
         
         # Bind the close window event
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -57,7 +63,7 @@ class Tuner_GUI:
         
         # Start the tuner in a new thread
         print("Tuner started")
-        self.tuner_thread = Thread(target=self.tuner.start, args=(float('inf'), self.update_note_label))
+        self.tuner_thread = Thread(target=self.tuner.start, args=(float('inf'), self.update_note_label, True))
         self.tuner_thread.start()
         
         
@@ -71,6 +77,10 @@ class Tuner_GUI:
         self.tuner.stop()
         self.tuner_thread.join()
         
+        # Update label and progress bar
+        self.note_label.config(text="")
+        self.progress["value"] = 0
+        
         
     def on_closing(self):
         if self.is_running:
@@ -78,13 +88,16 @@ class Tuner_GUI:
         self.root.destroy()
         
         
-    def update_note_label(self, note):
+    def update_note_label(self, note_info):
+        note, percentage = note_info
         self.note_label.config(text=f"{note}")
+        self.progress["value"] = percentage
             
         
     def run(self):
         self.root.mainloop()
-        
+    
+    
 if __name__ == "__main__":
     tuner = Tuner()
     gui = Tuner_GUI(tuner)
