@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import pyaudio
 import time
-from threading import Thread
 
 class Tuner:
     def __init__(self, record_seconds=1, chunk=1024, rate=44100, volume_threshold=100, magnitude_threshold=1000):
@@ -17,7 +16,7 @@ class Tuner:
         
     
     def load_notes_frequencies_csv(self):
-        df = pd.read_csv('notes_frequencies.csv')
+        df = pd.read_csv('notes_frequencies.csv') 
         note_list = df.iloc[:, 0].to_list()
         all_notes = df.iloc[:, 1:].to_numpy()
         return all_notes, note_list
@@ -127,10 +126,10 @@ class Tuner:
                             # Print note
                             print(f"\r{note_str}")
                         
-            print("\nTuner stopped.")
+            print("Tuner stopped.")
                         
         except KeyboardInterrupt:
-            print("\nTuner stopped by user.")
+            print("Tuner stopped by user.")
             
         finally:
             self.audio.terminate()
@@ -139,13 +138,10 @@ class Tuner:
         self.running = False
             
             
-    # In futre iterations, "start" will not print anything, just return a string which will either be printed or displayed on the GUI
         
         
 if __name__ == "__main__":      
     tuner = Tuner()
-    
-    # Start the tuner in a separate thread so that it can be stopped later
     tuner.start(10)
         
         

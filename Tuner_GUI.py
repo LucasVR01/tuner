@@ -4,8 +4,6 @@ from tkinter import ttk
 from threading import Thread
 from Tuner_Class import Tuner
 
-
-
 class Tuner_GUI:
     def __init__(self, tuner):
         self.tuner = tuner
@@ -68,6 +66,7 @@ class Tuner_GUI:
         
         
     def stop_tuner(self):
+        # Disable the stop button and enable the start button
         self.stop_button.config(state="disabled")
         self.start_button.config(state="normal")
         
