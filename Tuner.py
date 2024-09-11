@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pyaudio
 import time
+from tqdm import tqdm
 
 class Tuner:
     def __init__(self, record_seconds=1, chunk=1024, rate=44100, volume_threshold=100, magnitude_threshold=1000):
@@ -11,18 +12,18 @@ class Tuner:
         self.volume_threshold = volume_threshold
         self.magnitude_threshold = magnitude_threshold
         self.audio = None
-        self.all_notes, self.note_list = self.load_notes_frequencies_csv()
+        self.all_notes, self.note_list = self._load_notes_frequencies_csv()
         self.running = False
         
     
-    def load_notes_frequencies_csv(self):
+    def _load_notes_frequencies_csv(self):
         df = pd.read_csv('notes_frequencies.csv') 
         note_list = df.iloc[:, 0].to_list()
         all_notes = df.iloc[:, 1:].to_numpy()
         return all_notes, note_list
         
     
-    def listen_pyaudio(self):
+    def _listen_pyaudio(self):
         FORMAT = pyaudio.paInt16
         CHANNELS = 1
     
@@ -44,7 +45,7 @@ class Tuner:
         return audio_data
     
     
-    def get_signal_spectrum(self, audio_data):
+    def _get_signal_spectrum(self, audio_data):
         # Perform FFT
         n = len(audio_data)
         audio_data_fft = np.abs(np.fft.fft(audio_data))
@@ -60,7 +61,7 @@ class Tuner:
         return x, f
     
     
-    def get_note_frequency(self, x, f):
+    def _get_note_frequency(self, x, f):
         if np.max(x) > self.magnitude_threshold:
             ft = f[x >= self.magnitude_threshold]        # frequencies higher than threshold
             ft_gp1 = ft[ft < ft[0]*1.05]                 # frequencies close to first harmonic (first group)
@@ -73,7 +74,7 @@ class Tuner:
         return note
     
     
-    def match_note(self, note, dif=True):
+    def _match_note(self, note, dif=True):
         # Identify note closest to first harmonic
         ratios = note/self.all_notes
         closeness = np.abs(ratios - 1)
@@ -95,12 +96,15 @@ class Tuner:
         self.running = True
         self.audio = pyaudio.PyAudio()
         start_time = time.time()
-        print("Recording...")
+        print("Tuner started: Recording...")
         
+        if not callback:
+            progress_bar = tqdm(total=100, desc="", bar_format='{desc} |{bar}|')
+
         try:
             while self.running and time.time() - start_time < listen_time:
                 # Record using pyaudio
-                audio_data = self.listen_pyaudio()
+                audio_data = self._listen_pyaudio()
                 
                 # Compute average volume of audio_data
                 avg_volume = np.mean(np.abs(audio_data))
@@ -110,29 +114,35 @@ class Tuner:
                     normalized_audio_data = audio_data / np.max(np.abs(audio_data))
                     
                     # Perform FFT and get signal spectrum
-                    x, f = self.get_signal_spectrum(normalized_audio_data)
+                    x, f = self._get_signal_spectrum(normalized_audio_data)
                     
                     # Identify note frequency
-                    note = self.get_note_frequency(x, f)
+                    note = self._get_note_frequency(x, f)
                     
                     if note:
                         # Identify note closest to first harmonic
-                        note_str, percentage = self.match_note(note, dif)
+                        note_str, percentage = self._match_note(note, dif)
                         
                         if callback:
                             # Send the note to the GUI via the callback
                             callback((note_str, percentage))
                         else:
-                            # Print note
-                            print(f"\r{note_str}")
-                        
-            print("Tuner stopped.")
+                            # Display progress bar with note
+                            progress_bar.n = percentage
+                            progress_bar.set_description(note_str if len(note_str) == 2 else note_str + " ")
+                            progress_bar.refresh()
+                            
+            print("\nTuner stopped.")
                         
         except KeyboardInterrupt:
-            print("Tuner stopped by user.")
+            print("\nTuner stopped by user.")
             
         finally:
+            if not callback:
+                progress_bar.close()
+            
             self.audio.terminate()
+            
             
     def stop(self):
         self.running = False
@@ -142,7 +152,7 @@ class Tuner:
         
 if __name__ == "__main__":      
     tuner = Tuner()
-    tuner.start(10)
+    tuner.start(100)
         
         
         

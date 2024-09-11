@@ -2,7 +2,7 @@ import ctypes
 import tkinter as tk
 from tkinter import ttk
 from threading import Thread
-from Tuner_Class import Tuner
+from Tuner import Tuner
 
 class Tuner_GUI:
     def __init__(self, tuner):
@@ -26,14 +26,14 @@ class Tuner_GUI:
         self.start_button = tk.Button(button_frame, text="Start Tuner", bg="green", 
                                       fg="white", font=("Helvetica", 10, "bold"), 
                                       activebackground="green", activeforeground="white",
-                                      command=self.start_tuner,)
+                                      command=self._start_tuner,)
         self.start_button.pack(side="left", padx=5)
 
         # Create stop button
         self.stop_button = tk.Button(button_frame, text="Stop Tuner", bg="red", 
                                      fg="white", font=("Helvetica", 10, "bold"), 
                                      activebackground="red", activeforeground="white",
-                                     command=self.stop_tuner,)
+                                     command=self._stop_tuner,)
         self.stop_button.pack(side="left", padx=5)
         self.stop_button.config(state="disabled")
         
@@ -49,10 +49,10 @@ class Tuner_GUI:
         
         
         # Bind the close window event
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
         
         
-    def start_tuner(self):
+    def _start_tuner(self):
         # Disable the start button and enable the stop button
         self.start_button.config(state="disabled")
         self.stop_button.config(state="normal")
@@ -60,34 +60,52 @@ class Tuner_GUI:
         self.is_running = True
         
         # Start the tuner in a new thread
-        print("Tuner started")
-        self.tuner_thread = Thread(target=self.tuner.start, args=(float('inf'), self.update_note_label, True))
+        self.tuner_thread = Thread(target=self.tuner.start, args=(float('inf'), self._update_note_label, True))
+        self.tuner_thread.daemon = True
         self.tuner_thread.start()
         
         
-    def stop_tuner(self):
+    def _stop_tuner(self):
         # Disable the stop button and enable the start button
         self.stop_button.config(state="disabled")
         self.start_button.config(state="normal")
         
         self.is_running = False
         
-        # Stop the tuner
-        self.tuner.stop()
-        self.tuner_thread.join()
+        # Stop the tuner in a separate thread to avoid blocking the GUI
+        self.stop_thread = Thread(target=self.__stop_tuner_thread)
+        self.stop_thread.daemon = True
+        self.stop_thread.start()
         
-        # Update label and progress bar
+        
+    def __stop_tuner_thread(self):
+        # This method will run in a separate thread to avoid GUI lag
+        self.tuner.stop()
+
+        # Wait for the tuner thread to finish
+        self.tuner_thread.join()
+
+        # Update label and progress bar in the main thread after the tuner is stopped
+        self.root.after(0, self._reset_gui)
+        
+        
+    def _reset_gui(self):
+        # Reset the GUI after the tuner stops
         self.note_label.config(text="")
         self.progress["value"] = 0
+
         
-        
-    def on_closing(self):
+    def _on_closing(self):
         if self.is_running:
-            self.stop_tuner()
+            self._stop_tuner()
+            
+        if self.tuner_thread and self.tuner_thread.is_alive():
+            self.tuner_thread.join(timeout=1)  # Wait for the thread to terminate safely
+
         self.root.destroy()
         
         
-    def update_note_label(self, note_info):
+    def _update_note_label(self, note_info):
         note, percentage = note_info
         self.note_label.config(text=f"{note}")
         self.progress["value"] = percentage
