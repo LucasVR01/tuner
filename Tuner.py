@@ -147,20 +147,7 @@ class Tuner:
     def stop(self):
         self.running = False
             
-            
-        
-        
+                
 if __name__ == "__main__":      
     tuner = Tuner()
-    tuner.start(100)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+    tuner.start(10)

@@ -8,6 +8,7 @@ class Tuner_GUI:
     def __init__(self, tuner):
         self.tuner = tuner
         self.is_running = False
+        self.is_closing = False
         
         # Adjust the resolution
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
@@ -42,11 +43,10 @@ class Tuner_GUI:
                                    anchor="center", justify="center")
         self.note_label.pack(pady=20)
         
-        # Progress bar to show tuning status
+        # Progress bar to show how far note is from being in tune
         self.progress = ttk.Progressbar(self.root, orient="horizontal", length=200, mode="determinate")
         self.progress.pack(pady=10)
-        self.progress["maximum"] = 100  # Progress bar range from 0 to 100
-        
+        self.progress["maximum"] = 100
         
         # Bind the close window event
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
@@ -72,52 +72,60 @@ class Tuner_GUI:
         
         self.is_running = False
         
-        try:
-            # Stop the tuner in a separate thread to avoid blocking the GUI
-            self.stop_thread = Thread(target=self._stop_tuner_thread)
-            self.stop_thread.daemon = True
-            self.stop_thread.start()
-            
-            # Reset the GUI
-            self.root.after(1000, self._reset_gui)
-            
-        except Exception as e:
-            print(f"Error stopping tuner: {e}")
+        # Stop the tuner in a separate thread to avoid blocking the GUI
+        self.stop_thread = Thread(target=self._stop_tuner_thread)
+        self.stop_thread.daemon = True
+        self.stop_thread.start()
+        
+        # Reset GUI after 1000 ms
+        self.root.after(1000, self._reset_gui)
         
         
     def _stop_tuner_thread(self):
+        # Stop tuner and terminate thread where the tuner is running
         self.tuner.stop()
         self.tuner_thread.join(timeout=1)
         
         
     def _reset_gui(self):
         # Reset the GUI after the tuner stops
-        if self.root:  # Ensure the window still exists
+        if self.root:
             self.note_label.config(text="")
             self.progress["value"] = 0
-
-        
-    def _on_closing(self):
-        if self.is_running:
-            self._stop_tuner()
-            self.stop_thread.join()
-
-        self.root.destroy()
         
         
     def _update_note_label(self, note_info):
+        # Show note being played in window
         note, percentage = note_info
         self.note_label.config(text=f"{note}")
         self.progress["value"] = percentage
             
         
+    def _on_closing(self):
+        if not self.is_closing:
+            self.is_closing = True
+            
+            if self.is_running:
+                self._stop_tuner()
+                self.stop_thread.join()
+                
+            if self.root:
+                self.root.destroy()
+        
+        
     def run(self):
-        self.root.mainloop()
+        try:
+            self.root.mainloop()
+        except KeyboardInterrupt:
+            print("Tuner GUI interrupted by user.")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+        finally:
+            # Ensure that resources are cleaned up
+            self._on_closing()
     
     
 if __name__ == "__main__":
     tuner = Tuner()
     gui = Tuner_GUI(tuner)
     gui.run()
-        
-
