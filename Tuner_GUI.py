@@ -72,32 +72,35 @@ class Tuner_GUI:
         
         self.is_running = False
         
-        # Stop the tuner in a separate thread to avoid blocking the GUI
-        self.stop_thread = Thread(target=self._stop_tuner_thread)
-        self.stop_thread.daemon = True
-        self.stop_thread.start()
+        try:
+            # Stop the tuner in a separate thread to avoid blocking the GUI
+            self.stop_thread = Thread(target=self._stop_tuner_thread)
+            self.stop_thread.daemon = True
+            self.stop_thread.start()
+            
+            # Reset the GUI
+            self.root.after(1000, self._reset_gui)
+            
+        except Exception as e:
+            print(f"Error stopping tuner: {e}")
         
         
     def _stop_tuner_thread(self):
-        # This method will run in a separate thread to avoid GUI lag
         self.tuner.stop()
-
-        # Wait for the tuner thread to finish
-        self.tuner_thread.join()
-
-        # Update label and progress bar in the main thread after the tuner is stopped
-        self.root.after(0, self._reset_gui)
+        self.tuner_thread.join(timeout=1)
         
         
     def _reset_gui(self):
         # Reset the GUI after the tuner stops
-        self.note_label.config(text="")
-        self.progress["value"] = 0
+        if self.root:  # Ensure the window still exists
+            self.note_label.config(text="")
+            self.progress["value"] = 0
 
         
     def _on_closing(self):
         if self.is_running:
             self._stop_tuner()
+            self.stop_thread.join()
 
         self.root.destroy()
         

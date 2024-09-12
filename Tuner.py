@@ -132,7 +132,7 @@ class Tuner:
                             progress_bar.set_description(note_str if len(note_str) == 2 else note_str + " ")
                             progress_bar.refresh()
                             
-            print("\nTuner stopped.")
+            print("\nTuner stopped." if not callback else "Tuner stopped.")
                         
         except KeyboardInterrupt:
             print("\nTuner stopped by user.")
