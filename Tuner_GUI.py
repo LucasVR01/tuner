@@ -95,11 +95,17 @@ class Tuner_GUI:
         
         
     def _update_note_label(self, note_info):
+        if not self.is_closing and self.root.winfo_exists():
+            # Schedule the update on the main thread
+            self.root.after(0, self._main_update_note_label, note_info)    
+        
+        
+    def _main_update_note_label(self, note_info):
         # Show note being played in window
         note, percentage = note_info
         self.note_label.config(text=f"{note}")
         self.progress["value"] = percentage
-            
+        
         
     def _on_closing(self):
         if not self.is_closing:
