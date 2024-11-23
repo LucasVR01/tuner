@@ -1,4 +1,3 @@
-import ctypes
 import tkinter as tk
 from tkinter import ttk
 from threading import Thread
@@ -6,15 +5,19 @@ from .tuner import Tuner
 
 class Tuner_GUI:
     def __init__(self, tuner):
+        """
+        Initializes the GUI for the tuner application.
+        
+        Parameters:
+        - tuner (Tuner): The Tuner object to use for note detection.
+        """
         self.tuner = tuner
         self.is_running = False
         self.is_closing = False
         
-        # Adjust the resolution in Windows
-        ctypes.windll.shcore.SetProcessDpiAwareness(1)
-        
         # Initialize tkinter
         self.root = tk.Tk()
+        self.root.tk.call('tk', 'scaling', 2.0)
         self.root.title("Tuner")
         self.root.geometry("300x200")
         self.root.eval('tk::PlaceWindow . center')
@@ -38,26 +41,29 @@ class Tuner_GUI:
         self.stop_button.pack(side="left", padx=5)
         self.stop_button.config(state="disabled")
         
-        # Label to display the detected note
+        # Label to display the detected musical note
         self.note_label = tk.Label(self.root, text="", font=("Helvetica", 20, "bold"),
                                    anchor="center", justify="center")
         self.note_label.pack(pady=20)
         
-        # Progress bar to show how far note is from being in tune
+        # Progress bar to show how far the detected note is from being in tune
         self.progress = ttk.Progressbar(self.root, orient="horizontal", length=200, mode="determinate")
         self.progress.pack(pady=10)
         self.progress["maximum"] = 100
         
-        # Bind the close window event
+        # Bind the close window event to handler
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
         
         
     def _start_tuner(self):
-        # Disable the start button and enable the stop button
-        self.start_button.config(state="disabled")
-        self.stop_button.config(state="normal")
+        """
+        Starts the tuner by enabling the stop button and disabling the start button.
+        It also launches the tuner in a separate thread.
+        """
+        self.start_button.config(state="disabled") # Disable the start button
+        self.stop_button.config(state="normal") # Enable the stop button
         
-        self.is_running = True
+        self.is_running = True # Indicate that the tuner is running
         
         # Start the tuner in a new thread
         self.tuner_thread = Thread(target=self.tuner.start, args=(float('inf'), self._update_note_label, True))
@@ -66,11 +72,14 @@ class Tuner_GUI:
         
         
     def _stop_tuner(self):
-        # Disable the stop button and enable the start button
-        self.stop_button.config(state="disabled")
-        self.start_button.config(state="normal")
+        """
+        Stops the tuner by disabling the stop button, enabling the start button, 
+        and stopping the tuner in a separate thread.
+        """
+        self.stop_button.config(state="disabled") # Disable stop button
+        self.start_button.config(state="normal") # Enable the start button
         
-        self.is_running = False
+        self.is_running = False # Indicate that the tuner is not running
         
         # Stop the tuner in a separate thread to avoid blocking the GUI
         self.stop_thread = Thread(target=self._stop_tuner_thread)
@@ -82,39 +91,59 @@ class Tuner_GUI:
         
         
     def _stop_tuner_thread(self):
-        # Stop tuner and terminate thread where the tuner is running
+        """
+        Stops the tuner in a separate thread and ensures the tuner thread is joined.
+        """
         self.tuner.stop()
         self.tuner_thread.join(timeout=1)
         
         
     def _reset_gui(self):
-        # Reset the GUI after the tuner stops
+        """
+        Resets the GUI elements (note label and progress bar) after the tuner is stopped.
+        """
         if self.root:
-            self.note_label.config(text="")
-            self.progress["value"] = 0
+            self.note_label.config(text="") # Clear the note label
+            self.progress["value"] = 0 # Reset the progress bar
         
         
     def _update_note_label(self, note_info):
+        """
+        Updates the note label and progress bar with the detected note info.
+        This method is run on a separate thread, so it schedules the update on the main thread.
+        
+        Parameters:
+        - note_info (tuple): A tuple containing the note name and the percentage progress.
+        """
         if not self.is_closing and self.root.winfo_exists():
             # Schedule the update on the main thread
             self.root.after(0, self._main_update_note_label, note_info)    
         
         
     def _main_update_note_label(self, note_info):
-        # Show note being played in window
+        """
+        Main method to update the GUI components (note label and progress bar).
+        
+        Parameters:
+        - note_info (tuple): A tuple containing the note name and the percentage progress.
+        """
+        # Update the note being played in the window
         note, percentage = note_info
-        self.note_label.config(text=f"{note}")
-        self.progress["value"] = percentage
+        self.note_label.config(text=f"{note}") # Display the detected note
+        self.progress["value"] = percentage # Update the progress bar
         
         
     def _on_closing(self):
+        """
+        Handles the close window event, stops the tuner if running, and ensures cleanup.
+        """
         if not self.is_closing:
-            self.is_closing = True
+            self.is_closing = True # Prevent multiple close actions
             
             # Stop tuner if it's running
             if self.is_running:
                 self._stop_tuner()
-                self.stop_thread.join(timeout=1)
+                self.stop_thread.join(timeout=1) # Wait for the stop thread to finish
             
             # Close window
             if self.root:
@@ -122,6 +151,10 @@ class Tuner_GUI:
         
         
     def run(self):
+        """
+        Starts the main event loop for the tkinter GUI.
+        Catches exceptions and handles cleanup on window close.
+        """
         try:
             self.root.mainloop()
         except KeyboardInterrupt:
@@ -132,8 +165,3 @@ class Tuner_GUI:
             # Ensure that resources are cleaned up
             self._on_closing()
     
-    
-if __name__ == "__main__":
-    tuner = Tuner()
-    gui = Tuner_GUI(tuner)
-    gui.run()
