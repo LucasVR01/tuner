@@ -114,7 +114,7 @@ class Tuner_GUI:
             # Stop tuner if it's running
             if self.is_running:
                 self._stop_tuner()
-                self.stop_thread.join()
+                self.stop_thread.join(timeout=1)
             
             # Close window
             if self.root:
