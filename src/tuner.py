@@ -3,6 +3,7 @@ import pandas as pd
 import pyaudio
 import time
 from tqdm import tqdm
+import os
 
 class Tuner:
     def __init__(self, record_seconds=1, chunk=1024, rate=44100, volume_threshold=100, magnitude_threshold=1000):
@@ -17,7 +18,9 @@ class Tuner:
         
     
     def _load_notes_frequencies_csv(self):
-        df = pd.read_csv('notes_frequencies.csv') 
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        data_path = os.path.join(base_dir, 'data', 'notes_frequencies.csv')
+        df = pd.read_csv(data_path)
         note_list = df.iloc[:, 0].to_list()
         all_notes = df.iloc[:, 1:].to_numpy()
         return all_notes, note_list
@@ -40,7 +43,7 @@ class Tuner:
     
         stream.stop_stream()
         stream.close()
-    
+
         audio_data = np.concatenate(frames)
         return audio_data
     

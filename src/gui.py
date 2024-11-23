@@ -2,7 +2,7 @@ import ctypes
 import tkinter as tk
 from tkinter import ttk
 from threading import Thread
-from Tuner import Tuner
+from .tuner import Tuner
 
 class Tuner_GUI:
     def __init__(self, tuner):
@@ -10,7 +10,7 @@ class Tuner_GUI:
         self.is_running = False
         self.is_closing = False
         
-        # Adjust the resolution
+        # Adjust the resolution in Windows
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
         
         # Initialize tkinter
@@ -111,10 +111,12 @@ class Tuner_GUI:
         if not self.is_closing:
             self.is_closing = True
             
+            # Stop tuner if it's running
             if self.is_running:
                 self._stop_tuner()
                 self.stop_thread.join()
-                
+            
+            # Close window
             if self.root:
                 self.root.destroy()
         
