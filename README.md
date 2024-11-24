@@ -17,6 +17,7 @@ This file defines the graphical user interface for the tuner. Key features inclu
 - **Note Display**: Shows the detected musical note.
 - **Progress Bar**: Visualizes how close the detected note is to the correct frequency.
 - **Tkinter Framework**: Provides an interactive and user-friendly experience.
+- **Threading**: The GUI uses Python's threading module to offload long-running tasks, such as starting and stopping the tuner, into background threads..
 
 ### `src/audio_processing.py`
 This file contains the core logic for audio processing and note detection. Key features include:

@@ -81,20 +81,16 @@ class Tuner_GUI:
         self.is_running = False # Indicate that the tuner is not running
         
         # Stop the tuner in a separate thread to avoid blocking the GUI
-        self.stop_thread = Thread(target=self._stop_tuner_thread)
+        self.stop_thread = Thread(target=self.tuner.stop)
         self.stop_thread.daemon = True
         self.stop_thread.start()
-        
-        # Reset GUI after 1500 ms
-        self.root.after(1500, self._reset_gui)
-        
-        
-    def _stop_tuner_thread(self):
-        """
-        Stops the tuner in a separate thread and ensures the tuner thread is joined.
-        """
-        self.tuner.stop()
+
+        # Join threads
         self.tuner_thread.join(timeout=1)
+        self.stop_thread.join(timeout=1)
+        
+        # Reset GUI after 100 ms
+        self.root.after(100, self._reset_gui)
         
         
     def _reset_gui(self):
@@ -142,7 +138,6 @@ class Tuner_GUI:
             # Stop tuner if it's running
             if self.is_running:
                 self._stop_tuner()
-                self.stop_thread.join(timeout=1) # Wait for the stop thread to finish
             
             # Close window
             if self.root:
