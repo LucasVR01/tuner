@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from threading import Thread
-from .tuner import Tuner
 
 class Tuner_GUI:
     def __init__(self, tuner):
@@ -86,8 +85,8 @@ class Tuner_GUI:
         self.stop_thread.daemon = True
         self.stop_thread.start()
         
-        # Reset GUI after 1000 ms
-        self.root.after(1000, self._reset_gui)
+        # Reset GUI after 1500 ms
+        self.root.after(1500, self._reset_gui)
         
         
     def _stop_tuner_thread(self):
